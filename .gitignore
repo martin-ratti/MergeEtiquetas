@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Entorno Virtual
+venv/
+.venv/
+
+# Carpetas de la App (Pilar 3)
+# No queremos subir los PDFs generados al repo
+_SALIDA/*
+# Opcional: Ignorar también las etiquetas de entrada
+# _ETIQUETAS_PDFS/*
+
+# Herramientas de empaquetado (PyInstaller)
+dist/
+build/
+*.spec
