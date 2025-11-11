@@ -1,5 +1,9 @@
 # src/interface/app_gui.py
 import customtkinter
+import os
+import sys
+import subprocess
+import tkinter.messagebox  # Para el diálogo de "Sí/No"
 from PIL import Image
 from pathlib import Path
 from typing import Callable, Dict, List, Tuple
@@ -15,15 +19,14 @@ PALETTE = {
     "error": "#FF0000"       # Rojo
 }
 
+# --- CONSTANTE PARA EL DISEÑO ---
+CHECKBOX_COLUMNS = 3
+
+
 class App(customtkinter.CTk):
     """
     Clase principal de la interfaz gráfica (GUI) de la aplicación.
-    
-    Atributos:
-        merge_use_case (Callable): Función del caso de uso para fusionar PDFs.
-        input_dir (Path): Directorio de entrada de PDFs.
-        output_dir (Path): Directorio de salida para el PDF fusionado.
-        logo_file (Path): Ruta al archivo de logo.
+    ... (el resto del docstring es igual) ...
     """
     
     def __init__(
@@ -45,13 +48,12 @@ class App(customtkinter.CTk):
         self.output_file = output_dir / "etiquetas_imprimir.pdf"
         self.logo_file = logo_file
         
-        # Almacenamiento de checkboxes [ (ruta_pdf, widget_checkbox) ]
         self.checkboxes: Dict[str, List[Tuple[Path, customtkinter.CTkCheckBox]]] = {}
 
         # 2. Configuración de la Ventana y Tema
         customtkinter.set_appearance_mode("Dark")
         self.title("Fusionador de Etiquetas (Animall)")
-        self.geometry("800x700")
+        self.geometry("800x700") 
         self.configure(fg_color=PALETTE["bg_dark"])
 
         # 3. Creación de Widgets
@@ -62,6 +64,7 @@ class App(customtkinter.CTk):
 
     def _setup_ui(self):
         """Construye la interfaz de usuario estática."""
+        # ... (Esta función no cambia en absoluto) ...
         
         # --- Cabecera con Logo ---
         try:
@@ -69,7 +72,7 @@ class App(customtkinter.CTk):
             logo_image = customtkinter.CTkImage(
                 light_image=pil_image,
                 dark_image=pil_image,
-                size=(300, 70) # Tamaño ajustado
+                size=(300, 70) 
             )
             logo_label = customtkinter.CTkLabel(
                 self, text="", image=logo_image, fg_color="transparent"
@@ -89,6 +92,7 @@ class App(customtkinter.CTk):
             self, fg_color=PALETTE["bg_light"]
         )
         self.scroll_frame.pack(fill="both", expand=True, padx=30, pady=10)
+        self.scroll_frame.grid_columnconfigure(0, weight=1)
 
         # --- Pie de Página (Botón y Estado) ---
         footer_frame = customtkinter.CTkFrame(
@@ -116,10 +120,18 @@ class App(customtkinter.CTk):
         )
         self.generate_button.pack(fill="x", pady=(10, 0))
 
+
     def _scan_and_display_files(self):
-        """Escanea el directorio de entrada y muestra las categorías y archivos."""
+        """
+        Escanea el directorio de entrada y muestra las categorías y archivos.
+        """
+        # ... (Esta función no cambia en absoluto) ...
         
         has_files = False
+        
+        for widget in self.scroll_frame.winfo_children():
+            widget.destroy()
+            
         for category_dir in sorted(self.input_dir.glob('*')):
             if not category_dir.is_dir():
                 continue
@@ -128,12 +140,12 @@ class App(customtkinter.CTk):
             pdf_files = sorted(list(category_dir.glob('*.pdf')))
             
             if not pdf_files:
-                continue # No mostrar categorías vacías
+                continue
 
             has_files = True
             self.checkboxes[category_name] = []
 
-            # Título de Categoría (Color Secundario)
+            # --- Título de Categoría ---
             cat_label = customtkinter.CTkLabel(
                 self.scroll_frame,
                 text=category_name,
@@ -142,16 +154,30 @@ class App(customtkinter.CTk):
             )
             cat_label.pack(anchor="w", pady=(15, 5), padx=10)
 
-            # Checkboxes para cada PDF
-            for pdf_file in pdf_files:
+            # --- Marco de Cuadrícula (Grid) para los Checkboxes ---
+            grid_frame = customtkinter.CTkFrame(
+                self.scroll_frame, fg_color="transparent"
+            )
+            grid_frame.pack(fill="x", anchor="w", padx=20) 
+
+            grid_frame.columnconfigure(
+                tuple(range(CHECKBOX_COLUMNS)), weight=1
+            )
+
+            # --- Checkboxes en Cuadrícula (Grid) ---
+            for index, pdf_file in enumerate(pdf_files):
+                row = index // CHECKBOX_COLUMNS
+                col = index % CHECKBOX_COLUMNS
+                
                 chk = customtkinter.CTkCheckBox(
-                    self.scroll_frame,
+                    grid_frame, 
                     text=pdf_file.name,
                     text_color=PALETTE["text"],
-                    fg_color=PALETTE["primary"], # Color del check
+                    fg_color=PALETTE["primary"], 
                     hover_color="#E09AC0"
                 )
-                chk.pack(anchor="w", padx=30, pady=2)
+                chk.grid(row=row, column=col, sticky="w", padx=10, pady=2)
+                
                 self.checkboxes[category_name].append((pdf_file, chk))
         
         if not has_files:
@@ -159,9 +185,33 @@ class App(customtkinter.CTk):
                 text=f"No se encontraron PDFs. Agrega carpetas y PDFs en '{self.input_dir.name}'",
                 text_color=PALETTE["secondary"]
             )
+            
+    # --- NUEVA FUNCIÓN AUXILIAR ---
+    def _open_output_folder(self):
+        """
+        Abre la carpeta de salida (_SALIDA) en el explorador de 
+        archivos del sistema operativo.
+        """
+        try:
+            if sys.platform == "win32":
+                os.startfile(self.output_dir)
+            elif sys.platform == "darwin": # macOS
+                subprocess.run(["open", self.output_dir])
+            else: # Linux
+                subprocess.run(["xdg-open", self.output_dir])
+        except Exception as e:
+            print(f"Error al abrir la carpeta: {e}")
+            self.status_label.configure(
+                text=f"Error al abrir la carpeta: {e}",
+                text_color=PALETTE["error"]
+            )
 
+    # --- FUNCIÓN MODIFICADA ---
     def _on_generate(self):
-        """Callback del botón 'Generar PDF'."""
+        """
+        Callback del botón 'Generar PDF'.
+        *** ESTA ES LA FUNCIÓN ACTUALIZADA ***
+        """
         
         # 1. Feedback de Carga (UX - Pilar 4)
         self.status_label.configure(
@@ -191,13 +241,29 @@ class App(customtkinter.CTk):
             self.merge_use_case(selected_files, str(self.output_file))
             
             # 5. Feedback de Éxito
+            success_msg = f"¡Éxito! PDF guardado en '{self.output_dir.name}/{self.output_file.name}'"
             self.status_label.configure(
-                text=f"¡Éxito! PDF guardado en '{self.output_dir.name}/{self.output_file.name}'",
+                text=success_msg,
                 text_color=PALETTE["success"]
             )
+
+            # --- ¡NUEVA CARACTERÍSTICA! ---
+            # Levantar la ventana principal por si estaba minimizada
+            self.attributes("-topmost", True)
+            self.update_idletasks()
+            self.attributes("-topmost", False)
+
+            # Usamos messagebox de tkinter. Es simple y efectivo.
+            open_folder = tkinter.messagebox.askyesno(
+                "Fusión Completada",
+                "¡Éxito! El PDF se ha generado.\n\n"
+                f"¿Deseas abrir la carpeta de salida ahora?",
+                icon='question'
+            )
             
-            # (Opcional) Abrir la carpeta de salida
-            # os.startfile(self.output_dir) 
+            if open_folder:
+                self._open_output_folder()
+            # --- FIN DE LA NUEVA CARACTERÍSTICA ---
 
         except Exception as e:
             # 5. Feedback de Error

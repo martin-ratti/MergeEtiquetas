@@ -12,18 +12,31 @@ def get_project_root() -> Path:
     """
     Obtiene la raíz del proyecto, donde las carpetas de usuario
     (_ETIQUETAS_PDFS, _SALIDA) deben estar.
-    
-    Esto es diferente del 'get_asset_path' porque estas carpetas
-    NO están empaquetadas con el .exe.
     """
     if getattr(sys, 'frozen', False):
-        # Estamos en un .exe de PyInstaller (ej. en 'dist/').
-        # Queremos la carpeta padre de donde está el .exe.
-        return Path(sys.executable).resolve().parent.parent
+        # Estamos en un .exe de PyInstaller.
+        # La raíz del proyecto ES la carpeta donde está el .exe.
+        # (HEMOS QUITADO EL .parent extra)
+        return Path(sys.executable).resolve().parent
     else:
         # Estamos en modo de desarrollo (python main.py).
         # La raíz es la carpeta donde está main.py.
         return Path(__file__).resolve().parent
+
+def get_asset_path(file_name: str) -> Path:
+    """
+    Obtiene la ruta correcta a un activo (como logo.png)
+    que está empaquetado CON el .exe.
+    (Esta función ya era correcta y no cambia)
+    """
+    if getattr(sys, 'frozen', False):
+        # Estamos en un .exe. El activo está en el dir temporal _MEIPASS.
+        base_path = Path(sys._MEIPASS)
+    else:
+        # Estamos en desarrollo. El activo está junto a main.py.
+        base_path = Path(__file__).resolve().parent
+        
+    return base_path / file_name
 
 def get_asset_path(file_name: str) -> Path:
     """
