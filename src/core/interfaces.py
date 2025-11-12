@@ -4,8 +4,10 @@ from typing import List
 
 class IPdfRepository(ABC):
     """
-    Define la interfaz para las operaciones de repositorio de PDF.
-    La capa 'core' depende de esta abstracción (Pilar 1).
+    Define la interfaz (el "contrato") para las operaciones de PDF.
+    
+    La capa 'core' depende de esta abstracción, no de una implementación
+    concreta (Pilar 1: Inversión de Dependencias).
     """
 
     @abstractmethod

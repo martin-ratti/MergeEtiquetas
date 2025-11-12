@@ -6,12 +6,13 @@ from src.core.interfaces import IPdfRepository
 class PyMuPDFRepository(IPdfRepository):
     """
     Implementación concreta de IPdfRepository usando la librería PyMuPDF.
-    Esta capa SÍ conoce las librerías externas (Pilar 1).
+    
+    Esta capa SÍ conoce los detalles de las librerías externas (Pilar 1).
     """
 
     def merge_pdfs(self, pdf_file_paths: List[str], output_path: str) -> None:
         """
-        Fusiona PDFs usando PyMuPDF (fitz).
+        Fusiona PDFs usando PyMuPDF (fitz) por su alta eficiencia.
         
         Args:
             pdf_file_paths (List[str]): Lista de rutas a los archivos PDF.
@@ -24,7 +25,7 @@ class PyMuPDFRepository(IPdfRepository):
 
         for pdf_path in pdf_file_paths:
             try:
-                # Usamos 'with' para asegurar el cierre del descriptor
+                # Usamos 'with' para asegurar el cierre del descriptor del archivo
                 with fitz.open(pdf_path) as pdf_doc:
                     result_pdf.insert_pdf(pdf_doc)
             except Exception as e:
