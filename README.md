@@ -4,8 +4,6 @@
 
 La aplicación escanea automáticamente una estructura de carpetas, permitiendo al usuario seleccionar etiquetas individuales o categorías enteras, y genera un único PDF fusionado con un solo clic.
 
-![Captura de pantalla de la aplicación MergeEtiquetas](img/screenshot.png)
-*(Recomendación: Reemplaza esta línea creando una carpeta `img` y guardando una captura de pantalla de la app llamada `screenshot.png` allí)*
 
 ---
 
