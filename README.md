@@ -1,13 +1,9 @@
-
-```markdown
 # 🏷️ MergeEtiquetas (Fusionador de Etiquetas)
 
 **MergeEtiquetas** es una aplicación de escritorio ligera, construida en Python, diseñada para la forrajería "Animall". Su única misión es eliminar el trabajo manual de fusionar múltiples archivos PDF de etiquetas en un solo documento listo para imprimir.
 
 La aplicación escanea automáticamente una estructura de carpetas, permitiendo al usuario seleccionar etiquetas individuales o categorías enteras, y genera un único PDF fusionado con un solo clic.
 
-![Captura de pantalla de la aplicación MergeEtiquetas](httpsimg/screenshot.png)
-*(Recomendación: Reemplaza esta línea creando una carpeta `img` y guardando una captura de pantalla de la app llamada `screenshot.png` allí)*
 
 ---
 
@@ -28,13 +24,12 @@ La aplicación escanea automáticamente una estructura de carpetas, permitiendo 
 
 Este programa está diseñado para ser portátil. Puedes mover la carpeta `Animall Fusionador` a cualquier lugar (otro PC, un pendrive, etc.) siempre que mantengas esta estructura:
 
-```
-
+```text
 /Animall Fusionador
-├── MergeEtiquetas.exe       \<-- El programa
-├── \_ETIQUETAS\_PDFS/         \<-- ¡Aquí pones tus PDFs\!
-├── \_SALIDA/                 \<-- Aquí se guardan los resultados
-└── logo.png                 \<-- (Requerido por el .exe)
+├── MergeEtiquetas.exe       <-- El programa
+├── _ETIQUETAS_PDFS/         <-- ¡Aquí pones tus PDFs!
+├── _SALIDA/                 <-- Aquí se guardan los resultados
+└── logo.png                 <-- (Requerido por el .exe)
 
 ````
 
@@ -44,15 +39,15 @@ Este programa está diseñado para ser portátil. Puedes mover la carpeta `Anima
 4.  **Generar:** Haz clic en el botón "Generar PDF...".
 5.  **Listo:** El archivo final (`etiquetas_imprimir.pdf`) aparecerá en la carpeta `_SALIDA/`.
 
----
+-----
 
 ## 🧑‍💻 Para Desarrolladores
 
 Esta aplicación sigue los principios de **Clean Architecture** para asegurar que sea mantenible, testeable y escalable.
 
-* `src/core`: Lógica de negocio pura (agnóstica).
-* `src/infrastructure`: Implementaciones concretas (PyMuPDF).
-* `src/interface`: La GUI (CustomTkinter) y el manejo de estado.
+  * `src/core`: Lógica de negocio pura (agnóstica).
+  * `src/infrastructure`: Implementaciones concretas (PyMuPDF).
+  * `src/interface`: La GUI (CustomTkinter) y el manejo de estado.
 
 ### Configuración del Entorno
 
@@ -65,6 +60,7 @@ Esta aplicación sigue los principios de **Clean Architecture** para asegurar qu
     ```bash
     # Windows
     .\venv\Scripts\activate
+
     # macOS/Linux
     source venv/bin/activate
     ```
@@ -82,6 +78,7 @@ Esta aplicación sigue los principios de **Clean Architecture** para asegurar qu
 Usamos `PyInstaller` para empaquetar la aplicación en un solo ejecutable.
 
 1.  Asegúrate de que `logo.png` esté en la raíz del proyecto.
+
 2.  Ejecuta el siguiente comando (con el `venv` activo):
 
     ```powershell
@@ -90,8 +87,9 @@ Usamos `PyInstaller` para empaquetar la aplicación en un solo ejecutable.
     ```
 
 3.  El ejecutable final aparecerá en la carpeta `dist/`.
+
 4.  Para la distribución final, sigue las instrucciones de "Modo de Uso" (copia el `.exe` a una carpeta limpia junto con `_ETIQUETAS_PDFS/` y `_SALIDA/`).
-````
+
+<!-- end list -->
 
 -----
-
