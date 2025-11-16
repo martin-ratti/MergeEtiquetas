@@ -58,6 +58,7 @@ coverage.xml
 venv/
 env/
 ENV/
+config.ini
 
 # Jupyter Notebook
 .ipynb_checkpoints
