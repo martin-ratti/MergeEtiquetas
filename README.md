@@ -1,95 +1,182 @@
-# 🏷️ MergeEtiquetas (Fusionador de Etiquetas)
+<h1 align="center">🏷️ MergeEtiquetas - Animall Forrajería</h1>
 
-**MergeEtiquetas** es una aplicación de escritorio ligera, construida en Python, diseñada para la forrajería "Animall". Su única misión es eliminar el trabajo manual de fusionar múltiples archivos PDF de etiquetas en un solo documento listo para imprimir.
+<div align="center">
+    <img src="https://img.shields.io/badge/Estado-Producción-success?style=for-the-badge&logo=check&logoColor=white" alt="Estado Badge"/>
+    <img src="https://img.shields.io/badge/Versión-1.0.0-blue?style=for-the-badge" alt="Version Badge"/>
+</div>
 
-La aplicación escanea automáticamente una estructura de carpetas, permitiendo al usuario seleccionar etiquetas individuales o categorías enteras, y genera un único PDF fusionado con un solo clic.
+<p align="center">
+    <a href="https://github.com/martin-ratti" target="_blank" style="text-decoration: none;">
+        <img src="https://img.shields.io/badge/👤%20Martín%20Ratti-martin--ratti-000000?style=for-the-badge&logo=github&logoColor=white" alt="Martin"/>
+    </a>
+</p>
 
+<p align="center">
+    <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python Badge"/>
+    <img src="https://img.shields.io/badge/Platform-Windows-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Windows Badge"/>
+    <img src="https://img.shields.io/badge/GUI-CustomTkinter-2B2B2B?style=for-the-badge&logo=tkinter&logoColor=white" alt="CustomTkinter Badge"/>
+    <img src="https://img.shields.io/badge/PDF-PyMuPDF-FF6F00?style=for-the-badge&logo=adobeacrobatreader&logoColor=white" alt="PDF Badge"/>
+    <img src="https://img.shields.io/badge/Mail-SMTP%20Gmail-EA4335?style=for-the-badge&logo=gmail&logoColor=white" alt="Gmail Badge"/>
+</p>
 
----
+<hr>
 
-## 🚀 Características Principales
+<h2>🎯 Objetivo y Alcance</h2>
 
-* **Detección Automática de Categorías:** Simplemente crea carpetas en `_ETIQUETAS_PDFS/`. La aplicación las detectará y las usará como categorías.
-* **Selección Rápida:** Marca etiquetas individuales o usa la casilla "Seleccionar Todos" para añadir categorías enteras de una sola vez.
-* **Interfaz Interactiva:**
-    * **Botón Inteligente:** El botón "Generar" se activa solo si hay etiquetas seleccionadas y muestra un recuento en tiempo real.
-    * **Tarjetas Interactivas:** Cada categoría se ilumina al pasar el ratón por encima.
-* **Limpieza Automática:** Después de generar un PDF, la selección se limpia automáticamente, dejando la app lista para la siguiente tarea.
-* **Acceso Rápido:** Un diálogo de éxito te pregunta si deseas abrir la carpeta de salida inmediatamente.
-* **Ultra-Ligera:** Construida con `CustomTkinter` y `PyMuPDF` (un wrapper de C), la aplicación es extremadamente rápida y consume muy pocos recursos.
+<p>
+    <strong>MergeEtiquetas</strong> es una aplicación de escritorio robusta y ligera desarrollada a medida para 
+    <strong>Animall Forrajería</strong>. Su misión crítica es eliminar el trabajo manual de procesamiento de etiquetas.
+</p>
 
----
+<p>
+    El sistema escanea automáticamente una estructura de carpetas predefinida, permite al usuario seleccionar 
+    etiquetas individuales o categorías completas mediante una interfaz gráfica moderna, fusiona los archivos PDF 
+    en un documento listo para imprimir y, opcionalmente, lo distribuye por correo electrónico.
+</p>
 
-## 🛠️ Modo de Uso (Para el Usuario Final)
+<hr>
 
-Este programa está diseñado para ser portátil. Puedes mover la carpeta `Animall Fusionador` a cualquier lugar (otro PC, un pendrive, etc.) siempre que mantengas esta estructura:
+<h2>⚙️ Stack Tecnológico & Arquitectura</h2>
 
-```text
+<p>El proyecto sigue los principios de <strong>Clean Architecture</strong> para asegurar desacoplamiento y escalabilidad.</p>
+
+<table>
+ <thead>
+  <tr>
+   <th>Capa / Componente</th>
+   <th>Tecnología / Ruta</th>
+   <th>Descripción</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><strong>Interface (GUI)</strong></td>
+   <td><code>src/interface/</code> (CustomTkinter)</td>
+   <td>Capa de presentación. Maneja la ventana, eventos, tarjetas interactivas y feedback visual.</td>
+  </tr>
+  <tr>
+   <td><strong>Core (Dominio)</strong></td>
+   <td><code>src/core/</code> (Python Puro)</td>
+   <td>Lógica de negocio agnóstica. Define casos de uso (Fusionar, Enviar) e Interfaces.</td>
+  </tr>
+  <tr>
+   <td><strong>Infrastructure</strong></td>
+   <td><code>src/infrastructure/</code></td>
+   <td>Implementaciones concretas: <strong>PyMuPDF</strong> (para PDFs) y <strong>smtplib</strong> (para Email).</td>
+  </tr>
+  <tr>
+   <td><strong>Empaquetado</strong></td>
+   <td>PyInstaller</td>
+   <td>Generación del ejecutable <code>.exe</code> portable (single-file).</td>
+  </tr>
+ </tbody>
+</table>
+
+<hr>
+
+<h2>🚀 Características Principales</h2>
+
+<ul>
+    <li><strong>⚡ Automatización de PDFs</strong>: Fusión inteligente de múltiples archivos en un solo <code>etiquetas_imprimir.pdf</code> optimizado.</li>
+    <li><strong>📂 Detección Dinámica</strong>: Escaneo automático de carpetas en <code>_ETIQUETAS_PDFS/</code> para crear categorías al instante.</li>
+    <li><strong>📧 Conectividad SMTP</strong>: Envío automático del reporte generado a sucursales o proveedores vía Gmail.</li>
+    <li><strong>🎨 UX/UI Moderna</strong>: 
+        <ul>
+            <li>Modo oscuro nativo.</li>
+            <li>Tarjetas interactivas con efectos <em>hover</em>.</li>
+            <li>Botón de acción inteligente con contador en tiempo real.</li>
+        </ul>
+    </li>
+</ul>
+
+<hr>
+
+<h2>🛠️ Modo de Uso (Portable)</h2>
+
+<p>La aplicación está diseñada para ser <strong>"Plug & Play"</strong>. La estructura de carpetas debe mantenerse así:</p>
+
+<pre>
 /Animall Fusionador
-├── MergeEtiquetas.exe       <-- El programa
-├── _ETIQUETAS_PDFS/         <-- ¡Aquí pones tus PDFs!
-├── _SALIDA/                 <-- Aquí se guardan los resultados
-└── logo.png                 <-- (Requerido por el .exe)
+├── MergeEtiquetas.exe       <-- El programa compilado
+├── config.ini               <-- Configuración de Email (Opcional)
+├── logo.png                 <-- Recurso gráfico (Requerido)
+├── _ETIQUETAS_PDFS/         <-- ¡Tus carpetas con PDFs van aquí!
+│   ├── Jabones/
+│   ├── Perfuminas/
+│   └── ...
+└── _SALIDA/                 <-- Aquí aparecerá el PDF final
+</pre>
 
-````
+<h3>Pasos de Ejecución</h3>
+<ol>
+    <li><strong>Cargar:</strong> Arrastra tus archivos <code>.pdf</code> dentro de las carpetas en <code>_ETIQUETAS_PDFS</code>.</li>
+    <li><strong>Ejecutar:</strong> Abre <code>MergeEtiquetas.exe</code>.</li>
+    <li><strong>Seleccionar:</strong> Marca las etiquetas deseadas o usa "Seleccionar Todos" por categoría.</li>
+    <li><strong>Procesar:</strong>
+        <ul>
+            <li>Clic en <strong>"Generar PDF"</strong> para crear el archivo en <code>_SALIDA/</code>.</li>
+            <li>Clic en <strong>"Enviar PDF por Email"</strong> (si está configurado) para despacharlo.</li>
+        </ul>
+    </li>
+</ol>
 
-1.  **Añadir Etiquetas:** Arrastra tus archivos `.pdf` de etiquetas dentro de la carpeta `_ETIQUETAS_PDFS/`. Puedes organizarlos en subcarpetas (ej. `.../Jabones/`, `.../Perfuminas/`).
-2.  **Ejecutar:** Haz doble clic en `MergeEtiquetas.exe`.
-3.  **Seleccionar:** Usa las casillas para seleccionar las etiquetas que quieres imprimir.
-4.  **Generar:** Haz clic en el botón "Generar PDF...".
-5.  **Listo:** El archivo final (`etiquetas_imprimir.pdf`) aparecerá en la carpeta `_SALIDA/`.
+<hr>
 
------
+<h2>⚙️ Configuración del Email</h2>
 
-## 🧑‍💻 Para Desarrolladores
+<p>Para habilitar el botón de envío, crea/edita el archivo <code>config.ini</code> junto al ejecutable:</p>
 
-Esta aplicación sigue los principios de **Clean Architecture** para asegurar que sea mantenible, testeable y escalable.
+<table>
+ <thead>
+  <tr>
+   <th>Archivo</th>
+   <th>Contenido Requerido</th>
+  </tr>
+ </thead>
+ <tbody>
+  <tr>
+   <td><code>config.ini</code></td>
+   <td>
+<pre lang="ini">
+[Email]
+email_emisor = tu_correo@gmail.com
+app_password = xxxx xxxx xxxx xxxx
+email_receptor = destino@ejemplo.com
+asunto = Pedido de Etiquetas - Animall
+</pre>
+   </td>
+  </tr>
+ </tbody>
+</table>
+<p><em>Nota: La <code>app_password</code> se genera desde la configuración de seguridad de Google.</em></p>
 
-  * `src/core`: Lógica de negocio pura (agnóstica).
-  * `src/infrastructure`: Implementaciones concretas (PyMuPDF).
-  * `src/interface`: La GUI (CustomTkinter) y el manejo de estado.
+<hr>
 
-### Configuración del Entorno
+<h2>🧑‍💻 Setup para Desarrolladores</h2>
 
-1.  Clona el repositorio.
-2.  Crea un entorno virtual:
-    ```bash
-    python -m venv venv
-    ```
-3.  Activa el entorno:
-    ```bash
-    # Windows
-    .\venv\Scripts\activate
+<h3>1. Inicialización</h3>
+<pre><code># Clonar repositorio
+git clone https://github.com/martin-ratti/MergeEtiquetas.git
 
-    # macOS/Linux
-    source venv/bin/activate
-    ```
-4.  Instala las dependencias:
-    ```bash
-    pip install -r requirements.txt
-    ```
-5.  Ejecuta la aplicación en modo desarrollo:
-    ```bash
-    python main.py
-    ```
+# Crear entorno virtual
+python -m venv venv
+.\venv\Scripts\activate  # Windows
 
-### 📦 Creación del Ejecutable (`.exe`)
+# Instalar dependencias
+pip install -r requirements.txt
+</code></pre>
 
-Usamos `PyInstaller` para empaquetar la aplicación en un solo ejecutable.
+<h3>2. Ejecución en Dev</h3>
+<pre><code>python main.py</code></pre>
 
-1.  Asegúrate de que `logo.png` esté en la raíz del proyecto.
+<h3>3. Compilación (Build .exe)</h3>
+<p>Comando para generar el ejecutable final con todos los recursos embebidos:</p>
+<pre><code>pyinstaller --onefile --windowed --add-data="logo.png;." --icon=logo.png main.py --name="MergeEtiquetas"</code></pre>
 
-2.  Ejecuta el siguiente comando (con el `venv` activo):
+<hr>
 
-    ```powershell
-    # Comando para Windows
-    pyinstaller --onefile --windowed --add-data="logo.png;." main.py --name="MergeEtiquetas"
-    ```
+<h2>⚖️ Créditos</h2>
 
-3.  El ejecutable final aparecerá en la carpeta `dist/`.
-
-4.  Para la distribución final, sigue las instrucciones de "Modo de Uso" (copia el `.exe` a una carpeta limpia junto con `_ETIQUETAS_PDFS/` y `_SALIDA/`).
-
-<!-- end list -->
-
------
+<p>
+    Desarrollado por <strong>Martín Ratti</strong> para uso interno en Animall Forrajería.
+</p>
