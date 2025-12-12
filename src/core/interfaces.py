@@ -7,13 +7,14 @@ class IPdfRepository(ABC):
     Define la interfaz (el "contrato") para las operaciones de PDF.
     """
     @abstractmethod
-    def merge_pdfs(self, pdf_file_paths: List[str], output_path: str) -> None:
+    def merge_pdfs(self, pdf_file_paths: List[str], output_path: str, on_progress: callable = None) -> None:
         """
         Fusiona una lista de archivos PDF en un único archivo de salida.
         
         Args:
             pdf_file_paths (List[str]): Lista de rutas a los archivos PDF de entrada.
             output_path (str): Ruta al archivo PDF de salida.
+            on_progress (callable, optional): Callback que recibe (actual, total) para reportar progreso.
         """
         pass
 

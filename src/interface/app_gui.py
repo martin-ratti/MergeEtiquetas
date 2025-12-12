@@ -2,6 +2,7 @@
 import customtkinter
 import os
 import sys
+import threading
 import subprocess
 import tkinter.messagebox
 import configparser
@@ -26,35 +27,13 @@ CHECKBOX_COLUMNS = 3
 class CategoryCard(customtkinter.CTkFrame):
     """
     Una Tarjeta de widget personalizada que encapsula una categoría.
-    Gestiona sus propios eventos de <Enter> y <Leave> para cambiar
-    su color de fondo, proporcionando feedback visual interactivo.
+    Se ha simplificado para mejorar el rendimiento del scroll.
     """
     def __init__(self, master, *args, **kwargs):
         super().__init__(master, 
                          fg_color=PALETTE["bg_light"], 
                          corner_radius=10, 
                          *args, **kwargs)
-        
-        self.base_color = PALETTE["bg_light"]
-        self.hover_color = PALETTE["bg_hover"]
-        
-        self.bind("<Enter>", self._on_mouse_enter)
-        self.bind("<Leave>", self._on_mouse_leave)
-        self.bind_children_events(self)
-
-    def bind_children_events(self, widget):
-        """Vincula recursivamente los eventos <Enter> y <Leave> a todos los hijos."""
-        for child in widget.winfo_children():
-            if not isinstance(child, customtkinter.CTkScrollbar):
-                child.bind("<Enter>", self._on_mouse_enter, add='+')
-                child.bind("<Leave>", self._on_mouse_leave, add='+')
-                self.bind_children_events(child)
-
-    def _on_mouse_enter(self, event):
-        self.configure(fg_color=self.hover_color)
-
-    def _on_mouse_leave(self, event):
-        self.configure(fg_color=self.base_color)
 
 
 class App(customtkinter.CTk):
@@ -92,7 +71,6 @@ class App(customtkinter.CTk):
         self.font_checkbox_master = customtkinter.CTkFont(size=15, weight="normal")
         self.font_checkbox_hijo = customtkinter.CTkFont(size=12)
         
-        # --- MODIFICADO: Eliminamos el flag 'pdf_generated_successfully' ---
         self.email_config: Dict[str, str] | None = None
 
         # Configuración de la Ventana
@@ -126,6 +104,21 @@ class App(customtkinter.CTk):
         self.scroll_frame.pack(fill="both", expand=True, padx=20, pady=10)
         self.scroll_frame.grid_columnconfigure(0, weight=1)
 
+        # Barra de herramientas superior (Refresh)
+        toolbar_frame = customtkinter.CTkFrame(self, fg_color="transparent")
+        toolbar_frame.pack(fill="x", padx=20, pady=(10, 0))
+        
+        self.refresh_btn = customtkinter.CTkButton(
+            toolbar_frame, 
+            text="Refrescar Lista", 
+            command=self._scan_and_display_files,
+            width=100,
+            height=30,
+            fg_color=PALETTE["bg_light"],
+            hover_color=PALETTE["bg_hover"]
+        )
+        self.refresh_btn.pack(side="right")
+
         footer_frame = customtkinter.CTkFrame(self, fg_color=PALETTE["bg_dark"])
         footer_frame.pack(fill="x", padx=30, pady=(10, 20))
 
@@ -144,6 +137,11 @@ class App(customtkinter.CTk):
             corner_radius=10
         )
         self.generate_button.pack(fill="x", pady=(5, 5))
+
+        self.progress_bar = customtkinter.CTkProgressBar(footer_frame, height=15)
+        self.progress_bar.set(0)
+        self.progress_bar.pack(fill="x", pady=(0, 5))
+        self.progress_bar.pack_forget() # Ocultar inicialmente
 
         self.email_button = customtkinter.CTkButton(
             footer_frame,
@@ -245,7 +243,7 @@ class App(customtkinter.CTk):
                 command=lambda m=master_chk, c=child_widgets_in_category: \
                     self._on_master_toggle(m, c)
             )
-            card.bind_children_events(card)
+            # card.bind_children_events(card) # Removed for performance
         
         if not has_files and not self.email_config:
             self.status_label.configure(
@@ -260,7 +258,6 @@ class App(customtkinter.CTk):
             else: child.deselect()
         self._update_button_states()
 
-    # --- ¡FUNCIÓN MODIFICADA! ---
     def _update_button_states(self):
         """
         Actualiza el estado de TODOS los botones (Generar y Email)
@@ -279,7 +276,7 @@ class App(customtkinter.CTk):
                 elif count_in_category == len(child_list): master_chk.select()
                 else: master_chk.deselect() 
 
-        # --- Lógica del Botón Generar PDF ---
+        # Lógica del Botón Generar PDF
         if total_selected == 0:
             self.generate_button.configure(
                 text="Selecciona etiquetas para generar", state="disabled"
@@ -293,10 +290,7 @@ class App(customtkinter.CTk):
             )
             self.status_label.configure(text=f"{total_selected} {plural} seleccionada(s).")
 
-        # --- ¡NUEVA LÓGICA DE BOTÓN DE EMAIL! ---
-        # El estado solo depende de dos cosas:
-        # 1. ¿Está cargada la configuración del email?
-        # 2. ¿Existe físicamente el archivo PDF a enviar?
+        # Lógica del Botón Enviar Email
         pdf_exists = self.output_file.exists()
         
         if self.email_config and pdf_exists:
@@ -304,7 +298,6 @@ class App(customtkinter.CTk):
         else:
             self.email_button.configure(state="disabled")
             
-    # --- ¡FUNCIÓN MODIFICADA! ---
     def _clear_all_checkboxes(self):
         """Deselecciona todas las casillas (maestras e hijas) en la app."""
         for master_chk in self.master_checkboxes.values():
@@ -313,11 +306,11 @@ class App(customtkinter.CTk):
             for _, child_chk in child_list:
                 child_chk.deselect()
         
-        # Ya no gestionamos el flag. Solo actualizamos los botones.
         self._update_button_states()
 
     def _open_output_folder(self):
         """Abre la carpeta de salida en el explorador de archivos (multiplataforma)."""
+        # Esta función ahora no se usa, pero la dejamos por si se reutiliza
         try:
             if sys.platform == "win32": os.startfile(self.output_dir)
             elif sys.platform == "darwin": subprocess.run(["open", self.output_dir])
@@ -326,70 +319,82 @@ class App(customtkinter.CTk):
             print(f"Error al abrir la carpeta: {e}")
             self.status_label.configure(text=f"Error: {e}", text_color=PALETTE["error"])
 
-    # --- ¡FUNCIÓN MODIFICADA! ---
     def _on_generate(self):
-        """Callback del botón "Generar PDF"."""
-        self.status_label.configure(text="Procesando...", text_color=PALETTE["secondary"])
-        self.generate_button.configure(state="disabled")
-        self.email_button.configure(state="disabled") # Deshabilitar mientras se genera
-        self.update_idletasks()
+        """Callback del botón "Generar PDF" (Asíncrono)."""
+        self.status_label.configure(text="Iniciando...", text_color=PALETTE["secondary"])
+        self._set_ui_state("disabled")
+        self.progress_bar.pack(fill="x", pady=(0, 5))
+        self.progress_bar.set(0)
 
         selected_files: List[str] = []
         for category in self.child_checkboxes:
             for file_path, chk in self.child_checkboxes[category]:
                 if chk.get() == 1: selected_files.append(str(file_path))
 
-        try:
-            self.merge_use_case(selected_files, str(self.output_file))
-            
-            success_msg = f"¡Éxito! PDF guardado en '{self.output_dir.name}'"
-            self.status_label.configure(text=success_msg, text_color=PALETTE["success"])
-            
-            # --- MODIFICADO ---
-            # Ya no establecemos 'self.pdf_generated_successfully = True'
-            
-            self._clear_all_checkboxes() # Esto llama a _update_button_states
-            
-            self.attributes("-topmost", True); self.update_idletasks(); self.attributes("-topmost", False)
+        # Threading
+        def run_merge():
+            try:
+                self.merge_use_case(
+                    selected_files, 
+                    str(self.output_file),
+                    on_progress=self._update_progress_safe
+                )
+                self.after(0, lambda: self._on_merge_success())
+            except Exception as e:
+                self.after(0, lambda: self._on_merge_error(e))
 
-            open_folder = tkinter.messagebox.askyesno(
-                "Fusión Completada",
-                "¡Éxito! El PDF se ha generado.\n\n"
-                f"¿Deseas abrir la carpeta de salida ahora?",
-                icon='question'
-            )
-            if open_folder: self._open_output_folder()
+        threading.Thread(target=run_merge, daemon=True).start()
 
-        except Exception as e:
-            print(f"Error en el núcleo: {e}")
-            self.status_label.configure(text=f"Error al generar PDF: {e}", text_color=PALETTE["error"])
-            # --- MODIFICADO ---
-            # Ya no establecemos 'self.pdf_generated_successfully = False'
-            self._update_button_states() # Restaurar estado de botones
-            
-    # --- ¡FUNCIÓN MODIFICADA! ---
+    def _update_progress_safe(self, current, total):
+        """Callback seguro para hilos."""
+        progress = current / total if total > 0 else 0
+        self.after(0, lambda: self.progress_bar.set(progress))
+
+    def _on_merge_success(self):
+        success_msg = f"¡Éxito! PDF guardado en '{self.output_dir.name}'"
+        self.status_label.configure(text=success_msg, text_color=PALETTE["success"])
+        self.progress_bar.pack_forget()
+        self._clear_all_checkboxes()
+        self._set_ui_state("normal")
+
+    def _on_merge_error(self, error):
+        print(f"Error en el núcleo: {error}")
+        self.status_label.configure(text=f"Error al generar PDF: {error}", text_color=PALETTE["error"])
+        self.progress_bar.pack_forget()
+        self._set_ui_state("normal")
+        self._update_button_states()
+
+    def _set_ui_state(self, state):
+        """Habilita o deshabilita botones críticos."""
+        self.generate_button.configure(state=state)
+        self.email_button.configure(state=state if self.email_config and self.output_file.exists() else "disabled")
+        self.refresh_btn.configure(state=state)
+
     def _on_send_email(self):
-        """Callback del botón "Enviar PDF por Email"."""
+        """Callback del botón "Enviar PDF por Email" (Asíncrono)."""
         self.status_label.configure(text="Enviando email...", text_color=PALETTE["secondary"])
-        self.email_button.configure(state="disabled") # Deshabilitar mientras se envía
-        self.generate_button.configure(state="disabled") # Deshabilitar para evitar conflictos
-        self.update_idletasks()
+        self._set_ui_state("disabled")
         
-        try:
-            self.send_email_use_case(
-                config=self.email_config,
-                pdf_path=str(self.output_file)
-            )
-            
-            self.status_label.configure(
-                text=f"Email enviado a {self.email_config['EMAIL_RECEPTOR']}",
-                text_color=PALETTE["success"]
-            )
-            # El botón se mantiene activo (porque el PDF y el config siguen siendo válidos)
-            self._update_button_states() 
+        def run_email():
+            try:
+                self.send_email_use_case(
+                    config=self.email_config,
+                    pdf_path=str(self.output_file)
+                )
+                self.after(0, self._on_email_success)
+            except Exception as e:
+                self.after(0, lambda: self._on_email_error(e))
+        
+        threading.Thread(target=run_email, daemon=True).start()
+    
+    def _on_email_success(self):
+        self.status_label.configure(
+            text=f"Email enviado a {self.email_config['EMAIL_RECEPTOR']}",
+            text_color=PALETTE["success"]
+        )
+        self._set_ui_state("normal")
 
-        except (ValueError, RuntimeError) as e:
-            print(f"Error en el núcleo de email: {e}")
-            self.status_label.configure(text=f"Error: {e}", text_color=PALETTE["error"])
-            # Restaurar botones al estado pre-envío
-            self._update_button_states()
+    def _on_email_error(self, error):
+        print(f"Error en el núcleo de email: {error}")
+        self.status_label.configure(text=f"Error: {error}", text_color=PALETTE["error"])
+        self._set_ui_state("normal")

@@ -10,20 +10,24 @@ class PyMuPDFRepository(IPdfRepository):
     Esta capa SÍ conoce los detalles de las librerías externas (Pilar 1).
     """
 
-    def merge_pdfs(self, pdf_file_paths: List[str], output_path: str) -> None:
+    def merge_pdfs(self, pdf_file_paths: List[str], output_path: str, on_progress: callable = None) -> None:
         """
         Fusiona PDFs usando PyMuPDF (fitz) por su alta eficiencia.
         
         Args:
             pdf_file_paths (List[str]): Lista de rutas a los archivos PDF.
             output_path (str): Ruta al archivo PDF de salida.
+            on_progress (callable, optional): Callback (actual, total).
             
         Raises:
             RuntimeError: Si ocurre un error al procesar o guardar un PDF.
         """
         result_pdf = fitz.open()
+        total_files = len(pdf_file_paths)
 
-        for pdf_path in pdf_file_paths:
+        for i, pdf_path in enumerate(pdf_file_paths):
+            if on_progress:
+                on_progress(i, total_files)
             try:
                 # Usamos 'with' para asegurar el cierre del descriptor del archivo
                 with fitz.open(pdf_path) as pdf_doc:
@@ -33,6 +37,9 @@ class PyMuPDFRepository(IPdfRepository):
                 raise RuntimeError(
                     f"Error al procesar el archivo '{pdf_path}': {e}"
                 )
+        
+        if on_progress:
+            on_progress(total_files, total_files)
 
         try:
             result_pdf.save(output_path)

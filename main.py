@@ -58,11 +58,12 @@ def main():
     
     # Repositorio de PDF
     pdf_repository = PyMuPDFRepository()
-    def merge_use_case_func(files: list[str], output: str):
+    def merge_use_case_func(files: list[str], output: str, on_progress: callable = None):
         merge_pdfs_use_case(
             pdf_files=files, 
             output_path=output, 
-            pdf_repository=pdf_repository
+            pdf_repository=pdf_repository,
+            on_progress=on_progress
         )
 
     # --- NUEVO: Servicio de Email ---

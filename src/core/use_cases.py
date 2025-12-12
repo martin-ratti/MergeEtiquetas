@@ -6,7 +6,8 @@ from pathlib import Path
 def merge_pdfs_use_case(
     pdf_files: List[str], 
     output_path: str, 
-    pdf_repository: IPdfRepository
+    pdf_repository: IPdfRepository,
+    on_progress: callable = None
 ) -> None:
     """
     Caso de uso para fusionar múltiples archivos PDF en uno solo.
@@ -22,7 +23,7 @@ def merge_pdfs_use_case(
     if not output_path.lower().endswith('.pdf'):
         raise ValueError("La ruta de salida debe ser un archivo .pdf")
 
-    pdf_repository.merge_pdfs(pdf_file_paths=pdf_files, output_path=output_path)
+    pdf_repository.merge_pdfs(pdf_file_paths=pdf_files, output_path=output_path, on_progress=on_progress)
 
 
 # --- NUEVO CASO DE USO ---
