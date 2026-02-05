@@ -130,7 +130,7 @@ class App(customtkinter.CTk):
         self.generate_button = customtkinter.CTkButton(
             footer_frame,
             text="Generar PDF",
-            command=self._on_generate,
+            command=self.start_merge_thread,
             fg_color=PALETTE["primary"],
             text_color=PALETTE["bg_dark"],
             hover_color="#E09AC0",
@@ -148,7 +148,7 @@ class App(customtkinter.CTk):
         self.email_button = customtkinter.CTkButton(
             footer_frame,
             text="Enviar PDF por Email",
-            command=self._on_send_email,
+            command=self.start_send_email_thread,
             fg_color=PALETTE["secondary"],
             text_color=PALETTE["bg_dark"],
             hover_color="#D0C204",
@@ -337,7 +337,7 @@ class App(customtkinter.CTk):
 
         self.progress_bar.set(0)
         self.status_label.configure(text="Procesando...")
-        self.merge_button.configure(state="disabled")
+        self.generate_button.configure(state="disabled")
 
         def task():
             try:
@@ -345,7 +345,7 @@ class App(customtkinter.CTk):
                 self.merge_use_case(
                     files=files, 
                     output=destination, 
-                    on_progress=self.update_progress
+                    on_progress=self._update_progress_safe
                 )
                 self.after(0, lambda: messagebox.showinfo("Éxito", "¡Fusión completada correctamente!"))
                 self.after(0, lambda: self.status_label.configure(text="Listo"))
@@ -356,7 +356,7 @@ class App(customtkinter.CTk):
                 self.after(0, lambda: messagebox.showerror("Error Inesperado", f"Ocurrió un error grave: {e}"))
                 self.after(0, lambda: self.status_label.configure(text="Error Grave"))
             finally:
-                self.after(0, lambda: self.merge_button.configure(state="normal"))
+                self.after(0, lambda: self.generate_button.configure(state="normal"))
                 self.after(0, lambda: self.progress_bar.set(0))
 
         threading.Thread(target=task, daemon=True).start()
@@ -402,7 +402,7 @@ class App(customtkinter.CTk):
         if not file_to_send:
              return
 
-        self.send_email_button.configure(state="disabled")
+        self.email_button.configure(state="disabled")
         self.status_label.configure(text="Enviando email...")
 
         def task():
@@ -416,7 +416,7 @@ class App(customtkinter.CTk):
             except Exception as e:
                  self.after(0, lambda: messagebox.showerror("Error", f"Error inesperado: {e}"))
             finally:
-                 self.after(0, lambda: self.send_email_button.configure(state="normal"))
+                 self.after(0, lambda: self.email_button.configure(state="normal"))
 
         threading.Thread(target=task, daemon=True).start()
 
@@ -425,51 +425,3 @@ class App(customtkinter.CTk):
         progress = current / total if total > 0 else 0
         self.after(0, lambda: self.progress_bar.set(progress))
 
-    def _on_merge_success(self):
-        success_msg = f"¡Éxito! PDF guardado en '{self.output_dir.name}'"
-        self.status_label.configure(text=success_msg, text_color=PALETTE["success"])
-        self.progress_bar.pack_forget()
-        self._clear_all_checkboxes()
-        self._set_ui_state("normal")
-
-    def _on_merge_error(self, error):
-        print(f"Error en el núcleo: {error}")
-        self.status_label.configure(text=f"Error al generar PDF: {error}", text_color=PALETTE["error"])
-        self.progress_bar.pack_forget()
-        self._set_ui_state("normal")
-        self._update_button_states()
-
-    def _set_ui_state(self, state):
-        """Habilita o deshabilita botones críticos."""
-        self.generate_button.configure(state=state)
-        self.email_button.configure(state=state if self.email_config and self.output_file.exists() else "disabled")
-        self.refresh_btn.configure(state=state)
-
-    def _on_send_email(self):
-        """Callback del botón "Enviar PDF por Email" (Asíncrono)."""
-        self.status_label.configure(text="Enviando email...", text_color=PALETTE["secondary"])
-        self._set_ui_state("disabled")
-        
-        def run_email():
-            try:
-                self.send_email_use_case(
-                    config=self.email_config,
-                    pdf_path=str(self.output_file)
-                )
-                self.after(0, self._on_email_success)
-            except Exception as e:
-                self.after(0, lambda: self._on_email_error(e))
-        
-        threading.Thread(target=run_email, daemon=True).start()
-    
-    def _on_email_success(self):
-        self.status_label.configure(
-            text=f"Email enviado a {self.email_config['EMAIL_RECEPTOR']}",
-            text_color=PALETTE["success"]
-        )
-        self._set_ui_state("normal")
-
-    def _on_email_error(self, error):
-        print(f"Error en el núcleo de email: {error}")
-        self.status_label.configure(text=f"Error: {error}", text_color=PALETTE["error"])
-        self._set_ui_state("normal")
