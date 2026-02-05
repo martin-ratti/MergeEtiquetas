@@ -96,3 +96,7 @@ $RECYCLE.BIN/
 
 # No queremos subir los PDFs generados al repo
 _SALIDA/*
+
+# Ignore input PDFs but keep directory structure
+_ETIQUETAS_PDFS/**/*.pdf
+_ETIQUETAS_PDFS/*.pdf

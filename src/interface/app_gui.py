@@ -5,9 +5,11 @@ import sys
 import threading
 import subprocess
 import tkinter.messagebox
+import tkinter.ttk as ttk
 import configparser
 from PIL import Image
 from pathlib import Path
+from src.core.exceptions import MergeError, EmailError
 from typing import Callable, Dict, List, Tuple
 
 # Paleta de colores
@@ -274,7 +276,7 @@ class App(customtkinter.CTk):
             if master_chk:
                 if count_in_category == 0: master_chk.deselect()
                 elif count_in_category == len(child_list): master_chk.select()
-                else: master_chk.deselect() 
+                else: master_chk.deselect()
 
         # Lógica del Botón Generar PDF
         if total_selected == 0:
@@ -319,31 +321,104 @@ class App(customtkinter.CTk):
             print(f"Error al abrir la carpeta: {e}")
             self.status_label.configure(text=f"Error: {e}", text_color=PALETTE["error"])
 
-    def _on_generate(self):
-        """Callback del botón "Generar PDF" (Asíncrono)."""
-        self.status_label.configure(text="Iniciando...", text_color=PALETTE["secondary"])
-        self._set_ui_state("disabled")
-        self.progress_bar.pack(fill="x", pady=(0, 5))
+    def start_merge_thread(self):
+        """Inicia el proceso de fusión en un hilo separado."""
+        files = self.files_list
+        if not files:
+            messagebox.showwarning("Advertencia", "No hay archivos para unir.")
+            return
+
+        destination = filedialog.asksaveasfilename(
+            defaultextension=".pdf",
+            filetypes=[("Archivos PDF", "*.pdf")]
+        )
+        if not destination:
+            return
+
         self.progress_bar.set(0)
+        self.status_label.configure(text="Procesando...")
+        self.merge_button.configure(state="disabled")
 
-        selected_files: List[str] = []
-        for category in self.child_checkboxes:
-            for file_path, chk in self.child_checkboxes[category]:
-                if chk.get() == 1: selected_files.append(str(file_path))
-
-        # Threading
-        def run_merge():
+        def task():
             try:
+                # Usamos el caso de uso inyectado
                 self.merge_use_case(
-                    selected_files, 
-                    str(self.output_file),
-                    on_progress=self._update_progress_safe
+                    files=files, 
+                    output=destination, 
+                    on_progress=self.update_progress
                 )
-                self.after(0, lambda: self._on_merge_success())
+                self.after(0, lambda: messagebox.showinfo("Éxito", "¡Fusión completada correctamente!"))
+                self.after(0, lambda: self.status_label.configure(text="Listo"))
+            except MergeError as e:
+                 self.after(0, lambda: messagebox.showerror("Error de Fusión", str(e)))
+                 self.after(0, lambda: self.status_label.configure(text="Error"))
             except Exception as e:
-                self.after(0, lambda: self._on_merge_error(e))
+                self.after(0, lambda: messagebox.showerror("Error Inesperado", f"Ocurrió un error grave: {e}"))
+                self.after(0, lambda: self.status_label.configure(text="Error Grave"))
+            finally:
+                self.after(0, lambda: self.merge_button.configure(state="normal"))
+                self.after(0, lambda: self.progress_bar.set(0))
 
-        threading.Thread(target=run_merge, daemon=True).start()
+        threading.Thread(target=task, daemon=True).start()
+
+    def start_send_email_thread(self):
+        """Inicia el proceso de envío de email en un hilo separado."""
+        # Verificar config al inicio
+        if not self.config_file.exists():
+             messagebox.showwarning("Falta Configuración", f"No se encontró {self.config_file}")
+             return
+             
+        # Leer config
+        import configparser
+        config = configparser.ConfigParser()
+        config.read(self.config_file)
+        
+        email_config = {}
+        try:
+             email_config['EMAIL_EMISOR'] = config['DEFAULT'].get('EMAIL_EMISOR', '')
+             email_config['APP_PASSWORD'] = config['DEFAULT'].get('APP_PASSWORD', '')
+             if 'EMAIL_RECEPTOR' in config['DEFAULT']:
+                email_config['EMAIL_RECEPTOR'] = config['DEFAULT']['EMAIL_RECEPTOR']
+             else:
+                 # Preguntar al usuario si no está en config
+                 pass
+             email_config['ASUNTO'] = config['DEFAULT'].get('ASUNTO', 'Etiquetas')
+        except Exception as e:
+             messagebox.showerror("Error Config", f"Error leyendo config.ini: {e}")
+             return
+
+        # Si falta receptor, pedirlo (simplificación)
+        if 'EMAIL_RECEPTOR' not in email_config or not email_config['EMAIL_RECEPTOR']:
+             dest = filedialog.askstring("Destinatario", "Ingrese email del destinatario:")
+             if not dest: return
+             email_config['EMAIL_RECEPTOR'] = dest
+             
+        # Pedir archivo a enviar (o usar el último generado si tuviéramos estado)
+        # Por ahora pedimos seleccionar
+        file_to_send = filedialog.askopenfilename(
+             title="Seleccionar PDF para enviar",
+             filetypes=[("Archivos PDF", "*.pdf")]
+        )
+        if not file_to_send:
+             return
+
+        self.send_email_button.configure(state="disabled")
+        self.status_label.configure(text="Enviando email...")
+
+        def task():
+            try:
+                 self.send_email_use_case(email_config, file_to_send)
+                 self.after(0, lambda: messagebox.showinfo("Éxito", "Email enviado correctamente."))
+                 self.after(0, lambda: self.status_label.configure(text="Email enviado"))
+            except EmailError as e:
+                  self.after(0, lambda: messagebox.showerror("Error de Email", str(e)))
+                  self.after(0, lambda: self.status_label.configure(text="Error Envío"))
+            except Exception as e:
+                 self.after(0, lambda: messagebox.showerror("Error", f"Error inesperado: {e}"))
+            finally:
+                 self.after(0, lambda: self.send_email_button.configure(state="normal"))
+
+        threading.Thread(target=task, daemon=True).start()
 
     def _update_progress_safe(self, current, total):
         """Callback seguro para hilos."""

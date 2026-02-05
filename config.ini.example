@@ -1,0 +1,5 @@
+[DEFAULT]
+EMAIL_EMISOR = tu_email@gmail.com
+APP_PASSWORD = tu_contraseña_de_aplicacion
+EMAIL_RECEPTOR = destinatario@ejemplo.com
+ASUNTO = Etiquetas Generadas

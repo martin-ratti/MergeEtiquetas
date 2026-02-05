@@ -7,6 +7,8 @@ from typing import Dict
 from src.core.interfaces import IEmailService
 from pathlib import Path
 
+from src.core.exceptions import EmailError
+
 class SMTPEmailService(IEmailService):
     """
     Implementación concreta de IEmailService usando smtplib de Python.
@@ -23,7 +25,7 @@ class SMTPEmailService(IEmailService):
             file_path (str): Ruta al archivo que se debe adjuntar.
             
         Raises:
-            RuntimeError: Si falla la conexión, autenticación o envío.
+            EmailError: Si falla la conexión, autenticación o envío.
         """
         
         # Crear el objeto del mensaje
@@ -43,7 +45,7 @@ class SMTPEmailService(IEmailService):
                                    subtype="octet-stream", 
                                    filename=file_name)
         except Exception as e:
-            raise RuntimeError(f"Error al leer el archivo adjunto: {e}")
+            raise EmailError(f"Error al leer el archivo adjunto: {e}")
 
         # Enviar el correo usando un contexto SSL seguro
         context = ssl.create_default_context()
@@ -54,10 +56,10 @@ class SMTPEmailService(IEmailService):
                 server.send_message(msg)
                 
         except smtplib.SMTPAuthenticationError:
-            raise RuntimeError(
+            raise EmailError(
                 "Error de autenticación. Revisa EMAIL_EMISOR o APP_PASSWORD en config.ini"
             )
         except smtplib.SMTPServerDisconnected:
-            raise RuntimeError("Se perdió la conexión con el servidor de Google.")
+            raise EmailError("Se perdió la conexión con el servidor de Google.")
         except Exception as e:
-            raise RuntimeError(f"Error desconocido al enviar el email: {e}")
+            raise EmailError(f"Error desconocido al enviar el email: {e}")
