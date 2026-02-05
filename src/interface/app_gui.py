@@ -323,7 +323,13 @@ class App(customtkinter.CTk):
 
     def start_merge_thread(self):
         """Inicia el proceso de fusión en un hilo separado."""
-        files = self.files_list
+        # Recopilar archivos seleccionados
+        files: List[str] = []
+        for category in self.child_checkboxes:
+            for file_path, chk in self.child_checkboxes[category]:
+                if chk.get() == 1: 
+                    files.append(str(file_path))
+
         if not files:
             messagebox.showwarning("Advertencia", "No hay archivos para unir.")
             return
